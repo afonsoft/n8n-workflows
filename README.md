@@ -21,6 +21,7 @@ Assistente Virtual (RAG)
 ### Workflows n8n
 - **`instagram-import-minha-conta.json`** - Importação posts da sua conta
 - **`instagram-import-hashtag-arteriafestas.json`** - Importação por hashtag #arteriafestas
+- **`instagram-import-conta-publica-terceiro.json`** - Importação de conta pública de terceiros
 - **`WhatsApp Chat IA - Arteria Festas.json`** - Workflow existente do assistente
 
 ### Banco de Dados
@@ -67,6 +68,12 @@ psql -U seu_usuario -d seu_banco -f sql-instagram-posts-schema.sql
 - **Fonte**: Posts com hashtag `#arteriafestas`
 - **Limite**: 25 posts por execução
 
+### Workflow 3: Conta Pública de Terceiros
+- **Agendamento**: A cada 6 horas
+- **Fonte**: Posts de conta pública específica
+- **Limite**: 25 posts por execução
+- **Configuração**: Alterar `NOME_DE_USUARIO_ALVO` no node Instagram
+
 ## 📊 Estrutura da Tabela
 
 ```sql
@@ -78,6 +85,8 @@ instagram_posts (
   legenda TEXT,                           -- Caption/descrição
   tipo_conteudo VARCHAR(50),              -- IMAGE, CAROUSEL_ALBUM, etc
   data_publicacao TIMESTAMP,              -- Data do post
+  conta_origem VARCHAR(100),              -- @username da conta
+  nome_perfil TEXT,                       -- Nome completo do perfil
   embedding VECTOR(768),                  -- Embedding Gemini
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
@@ -90,12 +99,21 @@ O workflow `WhatsApp Chat IA - Arteria Festas.json` já está configurado para u
 
 ### Exemplo de consulta RAG:
 ```sql
-SELECT post_id, legenda, url_post, 
+SELECT post_id, legenda, url_post, conta_origem,
        (embedding <=> $1) AS distance
 FROM instagram_posts 
 WHERE embedding IS NOT NULL
 ORDER BY embedding <=> $1 
 LIMIT 5;
+```
+
+### Busca por conta específica:
+```sql
+SELECT post_id, legenda, url_post, data_publicacao
+FROM instagram_posts 
+WHERE conta_origem = '@usuario_especifico'
+ORDER BY data_publicacao DESC
+LIMIT 10;
 ```
 
 ## 🔍 Monitoramento
@@ -149,6 +167,8 @@ ORDER BY data_publicacao DESC;
 - **Extração de preços** e vincular com `produtos_baloes`
 - **Webhooks** para ingestão em tempo real
 - **Dashboards** de monitoramento
+- **Múltiplas contas** para monitoramento concorrente
+- **Análise de engajamento** com métricas da API
 
 ---
 
@@ -156,8 +176,9 @@ ORDER BY data_publicacao DESC;
 
 - [ ] Instalar community node do Instagram
 - [ ] Configurar credenciais Instagram API
-- [ ] Executar script SQL da tabela
-- [ ] Importar workflows
+- [ ] Executar script SQL da tabela (com novos campos)
+- [ ] Importar workflows (3 workflows)
+- [ ] Configurar `NOME_DE_USUARIO_ALVO` no workflow de terceiros
 - [ ] Testar execução manual
 - [ ] Ativar agendamentos
 - [ ] Verificar integração com assistente existente

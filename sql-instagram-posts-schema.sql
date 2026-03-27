@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS instagram_posts (
   legenda TEXT,
   tipo_conteudo VARCHAR(50),
   data_publicacao TIMESTAMP,
+  conta_origem VARCHAR(100),
+  nome_perfil TEXT,
   embedding VECTOR(768),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -31,6 +33,10 @@ ON instagram_posts(data_publicacao DESC);
 CREATE INDEX IF NOT EXISTS ix_instagram_posts_legenda_fts
 ON instagram_posts
 USING GIN (to_tsvector('portuguese', coalesce(legenda,'')));
+
+-- Índice para buscas por conta de origem
+CREATE INDEX IF NOT EXISTS ix_instagram_posts_conta_origem
+ON instagram_posts(conta_origem);
 
 -- Índice vetorial para consultas semânticas (RAG)
 -- IVFFlat é mais rápido para grandes volumes de dados
@@ -62,6 +68,7 @@ SELECT
   post_id,
   legenda,
   url_post,
+  conta_origem,
   (embedding <=> '[0.0123, -0.8831, 0.4421]') AS distance
 FROM instagram_posts
 WHERE embedding IS NOT NULL
@@ -91,8 +98,15 @@ SELECT
   MIN(data_publicacao) as oldest_post
 FROM instagram_posts;
 
+-- Busca por conta específica
+SELECT post_id, legenda, url_post, data_publicacao
+FROM instagram_posts 
+WHERE conta_origem = '@usuario_especifico'
+ORDER BY data_publicacao DESC
+LIMIT 10;
+
 -- Posts recentes sem embedding (para reprocessamento)
-SELECT post_id, legenda, data_publicacao
+SELECT post_id, legenda, data_publicacao, conta_origem
 FROM instagram_posts 
 WHERE embedding IS NULL 
   AND data_publicacao > CURRENT_DATE - INTERVAL '7 days'
