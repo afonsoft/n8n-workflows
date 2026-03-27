@@ -1,0 +1,278 @@
+{
+  "name": "Instagram Import - Hashtag #arteriafestas",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Agendamento",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "hashtag",
+        "operation": "search",
+        "authentication": "accessToken",
+        "hashtag": "arteriafestas",
+        "limit": 25
+      },
+      "id": "instagram-hashtag-search",
+      "name": "Instagram - Hashtag #arteriafestas",
+      "type": "@mookielianhd/n8n-nodes-instagram.Instagram",
+      "typeVersion": 1.0,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Dividir em Lotes",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            {
+              "name": "post_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "url_post",
+              "value": "={{ $json.permalink }}"
+            },
+            {
+              "name": "url_imagem",
+              "value": "={{ $json.media_url }}"
+            },
+            {
+              "name": "legenda",
+              "value": "={{ $json.caption }}"
+            },
+            {
+              "name": "tipo_conteudo",
+              "value": "={{ $json.media_type }}"
+            },
+            {
+              "name": "data_publicacao",
+              "value": "={{ $json.timestamp }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "normalize-data",
+      "name": "Normalizar Dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO instagram_posts (post_id, url_post, url_imagem, legenda, tipo_conteudo, data_publicacao) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (post_id) DO UPDATE SET url_post = EXCLUDED.url_post, url_imagem = EXCLUDED.url_imagem, legenda = EXCLUDED.legenda, tipo_conteudo = EXCLUDED.tipo_conteudo, data_publicacao = EXCLUDED.data_publicacao;",
+        "mappingMode": "defineBelow",
+        "mappingValues": {
+          "values": [
+            {
+              "name": "post_id",
+              "value": "={{ $json.post_id }}"
+            },
+            {
+              "name": "url_post",
+              "value": "={{ $json.url_post }}"
+            },
+            {
+              "name": "url_imagem",
+              "value": "={{ $json.url_imagem }}"
+            },
+            {
+              "name": "legenda",
+              "value": "={{ $json.legenda }}"
+            },
+            {
+              "name": "tipo_conteudo",
+              "value": "={{ $json.tipo_conteudo }}"
+            },
+            {
+              "name": "data_publicacao",
+              "value": "={{ $json.data_publicacao }}"
+            }
+          ]
+        }
+      },
+      "id": "postgres-upsert",
+      "name": "PostgreSQL - UPSERT",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "nNWOoSo66DYfDpAF",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "id": "gemini-embeddings",
+      "name": "Gemini - Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        300
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eJJhTvSw2avKW11x",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE instagram_posts SET embedding = $1 WHERE post_id = $2;",
+        "mappingMode": "defineBelow",
+        "mappingValues": {
+          "values": [
+            {
+              "name": "embedding",
+              "value": "={{ $json.embedding }}"
+            },
+            {
+              "name": "post_id",
+              "value": "={{ $('PostgreSQL - UPSERT').item.json.post_id }}"
+            }
+          ]
+        }
+      },
+      "id": "postgres-update-embedding",
+      "name": "PostgreSQL - Atualizar Embedding",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1560,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "nNWOoSo66DYfDpAF",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Agendamento": {
+      "main": [
+        [
+          {
+            "node": "Instagram - Hashtag #arteriafestas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram - Hashtag #arteriafestas": {
+      "main": [
+        [
+          {
+            "node": "Dividir em Lotes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dividir em Lotes": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Dados": {
+      "main": [
+        [
+          {
+            "node": "PostgreSQL - UPSERT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PostgreSQL - UPSERT": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Embeddings": {
+      "main": [
+        [
+          {
+            "node": "PostgreSQL - Atualizar Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "instagram-hashtag-arteriafestas",
+  "tags": []
+}

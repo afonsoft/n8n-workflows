@@ -1,0 +1,491 @@
+{
+  "name": "WhatsApp Chat IA - Arteria Festas",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "waha-webhook",
+        "options": {}
+      },
+      "id": "74a49205-ec90-4edc-85bc-009d7e955a24",
+      "name": "WAHA Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        32
+      ],
+      "webhookId": "80020acb-a736-4a60-a2b2-b94cb03b3777"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.payload.body }}",
+              "operation": "contains",
+              "value2": "/start"
+            }
+          ]
+        }
+      },
+      "id": "305390eb-ba9f-43a4-be1f-0a8bc8c73ba4",
+      "name": "Check /start",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-lite",
+        "options": {}
+      },
+      "id": "81772f0f-042b-49dc-b059-01f22bf1169f",
+      "name": "Gemini Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        240
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eJJhTvSw2avKW11x",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Para tornar o agente um especialista completo na Arteria Festas, o segredo é adicionar a diferenciação técnica entre balões de ar comum (estruturais) e balões com gás hélio (flutuantes), além de focar na composição de Buquês, que são produtos de alto valor agregado.\n\nAqui está o prompt ajustado com esses elementos:\n\nSYSTEM MESSAGE: CONSULTOR ESPECIALISTA ARTERIA FESTAS\nCONTEXTO DO SISTEMA\nVocê é o Consultor Criativo da Arteria Festas, especialista em cenografia com balões, Buquês Premium e Arranjos com Gás Hélio. Sua missão é transformar o desejo do cliente em um projeto viável, técnico e visualmente deslumbrante, garantindo a durabilidade e o impacto visual da decoração.\n\nINPUT DO CLIENTE\n\n{{ $node[\"WAHA Webhook\"].json.body.payload.body }}\n\n1. PROTOCOLO DE ANÁLISE (Raciocínio Interno)\nAntes de responder, siga estes passos silenciosamente:\n\nIdentificar Intenção: O cliente busca decoração estrutural (arcos/painéis), arranjos flutuantes (gás hélio) ou buquês de presente?\n\nChecagem de Dados: Se houver menção a valores, tipos de gás ou personalização, use obrigatoriamente o query_postgres.\n\nDiferenciação Técnica: Avalie se o que o cliente pede exige Gás Hélio (para flutuar) ou se pode ser um Buquê de Chão (com ar comum e base de sustentação).\n\n2. DIRETRIZES DE PERSONA E TOM\nTom de Voz: Profissional, entusiasta e inspirador. Você vende a \"magia da celebração\".\n\nVocabulário Técnico:\n\nGás Hélio & Durabilidade: Use termos como Hi-Float (gel que prolonga a flutuação), Balão Bubble (transparente e durável) e Válvula de Segurança.\n\nEstética: Acabamento Chrome/Espelhado, Balões Double Stuff (um balão dentro do outro para cores exclusivas), Bouquet de Topo e Personalização em Vinil.\n\n3. REGRAS DE EXECUÇÃO (OBRIGATÓRIAS)\nConsulta de Dados: É proibido chutar preços. Use o query_postgres para verificar:\n\nCusto de Cilindro/Carga de Hélio e taxas de personalização.\n\nDisponibilidade de modelos específicos: Numéricos, Personagens ou Bubbles.\n\nLogística e Segurança: Balões com gás hélio são sensíveis à temperatura e transporte. Sempre solicite:\n\nData e Horário do Evento (essencial para calcular o tempo de flutuação).\n\nLocal/CEP (para logística de entrega de itens inflados).\n\nCuradoria de Buquês: Ao sugerir buquês, descreva a composição: \"Um balão principal personalizado, acompanhado de clusters de balões cromados e fitilhos acetinados\".\n\n4. ESTRUTURA DA RESPOSTA\nSaudação Criativa: \"Olá! Que alegria ajudar a planejar esse momento na Arteria Festas.\"\n\nSugestão Técnica/Visual: Diferencie as opções. (Ex: \"Para um efeito flutuante na mesa do bolo, nossos Buquês com Gás Hélio em tons de Rose Gold são ideais\").\n\nTabela de Orçamento: Liste itens, preços consultados e se inclui personalização.\n\nCTA de Disponibilidade: \"Para garantir que tenhamos o gás hélio e as cores desejadas em estoque, qual a data e local da sua festa?\"\n\n5. TRATAMENTO DE EXCEÇÕES\nBalões Especiais: Se o cliente pedir um balão que não está no banco, explique que a Arteria Festas trabalha com projetos sob medida e que você enviará a solicitação para o designer de balões.\n\nSegurança: Se o cliente pedir algo tecnicamente inviável (ex: balão de hélio em local com muito vento forte), sugira educadamente a alternativa de Buquê de Chão Estruturado.",
+        "options": {
+          "systemMessage": "Você é o Especialista em Arte com Balões da Arteria Festas. Sua missão é transformar o interesse visual do nosso Instagram em projetos reais para eventos.\n\nPersonalidade: Entusiasta, criativa e altamente profissional. Use termos técnicos (ex: balões orgânicos, clusters, acabamento chrome) para demonstrar autoridade.\n\nBase de Conhecimento: Use as referências visuais do nosso Instagram @arteriafestaselocacoes para descrever cores, texturas e composições (ex: 'Como você viu no nosso post do Safari, usamos tons terrosos...'). Quando perguntarem sobre trabalhos recentes, novidades ou exemplos visuais, consulte automaticamente o Instagram Vector Store.\n\nProtocolo de Venda: Sempre que falarem de um modelo, pergunte a data do evento e o local para validar a agenda.\n\nEstilo de Escrita: Use negrito para destacar nomes de produtos e listas para facilitar a leitura. Responda sempre em Português (Brasil).\n\nTools: 'Consultar Produtos Tools', 'Instagram Vector Store'\n\nInstruções Instagram: Use 'Instagram Vector Store' para:\n- Mostrar exemplos de trabalhos recentes\n- Citando posts específicos: 'Como vimos em nosso post de [data]...'\n- Descrever tendências e novidades\n- Comprovar a qualidade com casos reais"
+        }
+      },
+      "id": "9b4cfc2f-f63e-4bc2-9fda-017bd071d7f4",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        -16,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://waha:3000/api/sendText",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": \"{{ $node[\"WAHA Webhook\"].json.body.payload.from }}\",\n  \"text\": {{ JSON.stringify($node[\"AI Agent\"].json.output) }},\n  \"session\": \"default\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "6b00c2ff-e084-42ba-a72b-7cd6a7ef4e09",
+      "name": "WAHA Send Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        480,
+        16
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "b3f0hZAD5RJelMnL",
+          "name": "Unnamed credential"
+        },
+        "httpHeaderAuth": {
+          "id": "UKOPoE2uKHcA4Rnv",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Check /start').item.json.body.payload.from }}",
+        "contextWindowLength": "=100"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        256
+      ],
+      "id": "24579ccf-b267-4df8-af8b-adfed67d9f57",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "nNWOoSo66DYfDpAF",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        352,
+        400
+      ],
+      "id": "df1db906-8668-4a07-b294-a03ee0eb65ef",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eJJhTvSw2avKW11x",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consultar os produtos e preços",
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "produtos_baloes",
+          "mode": "list",
+          "cachedResultName": "produtos_baloes"
+        },
+        "limit": 100,
+        "combineConditions": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        64,
+        256
+      ],
+      "id": "16e3390d-3560-4ccf-8bda-da592224781c",
+      "name": "Consultar Produtos Tools",
+      "credentials": {
+        "postgres": {
+          "id": "nNWOoSo66DYfDpAF",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use esta ferramenta para consultar o histórico de postagens, legendas, anúncios e informações publicadas na conta de Instagram @arteriafestaselocacoes. Consulte aqui sempre que o usuário perguntar sobre novidades, serviços, exemplos de trabalhos, tendências ou conteúdos postados recentemente. Use para mostrar casos reais e comprovar a qualidade dos serviços.",
+        "tableName": "instagram_posts",
+        "topK": 10,
+        "options": {
+          "columnNames": {
+            "values": {
+              "contentColumnName": "legenda"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        208
+      ],
+      "id": "e5d12490-3aca-4f64-b024-67db6fb5a0aa",
+      "name": "Instagram Vector Store",
+      "notesInFlow": false,
+      "credentials": {
+        "postgres": {
+          "id": "nNWOoSo66DYfDpAF",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "WAHA Webhook": [
+      {
+        "json": {
+          "headers": {
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "user-agent": "WAHA/2026.3.2",
+            "x-webhook-request-id": "4g8vwjv7mn87z8hu",
+            "x-webhook-timestamp": "1774574734525",
+            "content-length": "2695",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "host": "n8n:5678",
+            "connection": "keep-alive"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "id": "evt_01kmpeb35w20p95by6hxtyn008",
+            "timestamp": 1774574734525,
+            "event": "message.any",
+            "session": "default",
+            "metadata": {},
+            "me": {
+              "id": "5511985368545@c.us",
+              "pushName": "Afonso Dutra Nogueira Fi",
+              "lid": "168367080100025@lid",
+              "jid": "5511985368545:28@s.whatsapp.net"
+            },
+            "payload": {
+              "id": "true_170531743613027@lid_ACD3BC3C6DC0BA6F3B1F863D819BC62E",
+              "timestamp": 1774574734,
+              "from": "170531743613027@lid",
+              "fromMe": true,
+              "source": "app",
+              "body": "/start",
+              "to": null,
+              "participant": null,
+              "hasMedia": false,
+              "media": null,
+              "ack": 1,
+              "location": null,
+              "vCards": null,
+              "ackName": "SERVER",
+              "replyTo": null,
+              "_data": {
+                "Info": {
+                  "Chat": "170531743613027@lid",
+                  "Sender": "168367080100025@lid",
+                  "IsFromMe": true,
+                  "IsGroup": false,
+                  "AddressingMode": "",
+                  "SenderAlt": "",
+                  "RecipientAlt": "5513991415454@s.whatsapp.net",
+                  "BroadcastListOwner": "",
+                  "BroadcastRecipients": null,
+                  "ID": "ACD3BC3C6DC0BA6F3B1F863D819BC62E",
+                  "ServerID": 0,
+                  "Type": "text",
+                  "PushName": "Afonso Dutra Nogueira Fi",
+                  "Timestamp": "2026-03-27T01:25:34Z",
+                  "Category": "",
+                  "Multicast": false,
+                  "MediaType": "",
+                  "Edit": "",
+                  "MsgBotInfo": {
+                    "EditType": "",
+                    "EditTargetID": "",
+                    "EditSenderTimestampMS": "0001-01-01T00:00:00Z"
+                  },
+                  "MsgMetaInfo": {
+                    "TargetID": "",
+                    "TargetSender": "",
+                    "TargetChat": "",
+                    "DeprecatedLIDSession": null,
+                    "ThreadMessageID": "",
+                    "ThreadMessageSenderJID": ""
+                  },
+                  "VerifiedName": null,
+                  "DeviceSentMeta": {
+                    "DestinationJID": "170531743613027@lid",
+                    "Phash": ""
+                  }
+                },
+                "Message": {
+                  "conversation": "/start",
+                  "messageContextInfo": {
+                    "deviceListMetadata": {
+                      "senderKeyHash": "KXIr9JIsEuQbtw==",
+                      "senderTimestamp": 1774574638,
+                      "recipientKeyHash": "paXrMN2U+athIg==",
+                      "recipientTimestamp": 1773946493
+                    },
+                    "deviceListMetadataVersion": 2,
+                    "messageSecret": "YCsx0UQiYCFsx5ChUgTlNnaTRM9CUW0nvowh2iLgA8E="
+                  }
+                },
+                "IsEphemeral": false,
+                "IsViewOnce": false,
+                "IsViewOnceV2": false,
+                "IsViewOnceV2Extension": false,
+                "IsDocumentWithCaption": false,
+                "IsLottieSticker": false,
+                "IsBotInvoke": false,
+                "IsEdit": false,
+                "SourceWebMsg": null,
+                "UnavailableRequestID": "",
+                "RetryCount": 0,
+                "NewsletterMeta": null,
+                "RawMessage": {
+                  "deviceSentMessage": {
+                    "destinationJID": "170531743613027@lid",
+                    "message": {
+                      "conversation": "/start",
+                      "messageContextInfo": {
+                        "deviceListMetadata": {
+                          "senderKeyHash": "KXIr9JIsEuQbtw==",
+                          "senderTimestamp": 1774574638,
+                          "recipientKeyHash": "paXrMN2U+athIg==",
+                          "recipientTimestamp": 1773946493
+                        },
+                        "deviceListMetadataVersion": 2,
+                        "messageSecret": "YCsx0UQiYCFsx5ChUgTlNnaTRM9CUW0nvowh2iLgA8E="
+                      }
+                    }
+                  },
+                  "messageContextInfo": {
+                    "deviceListMetadata": {
+                      "senderKeyHash": "KXIr9JIsEuQbtw==",
+                      "senderTimestamp": 1774574638,
+                      "recipientKeyHash": "paXrMN2U+athIg==",
+                      "recipientTimestamp": 1773946493
+                    },
+                    "deviceListMetadataVersion": 2,
+                    "messageSecret": "YCsx0UQiYCFsx5ChUgTlNnaTRM9CUW0nvowh2iLgA8E="
+                  }
+                },
+                "Status": 2
+              }
+            },
+            "environment": {
+              "version": "2026.3.2",
+              "engine": "GOWS",
+              "tier": "CORE",
+              "browser": null,
+              "platform": "linux/x64",
+              "worker": {
+                "id": null
+              }
+            }
+          },
+          "webhookUrl": "https://n8n.afonsoft.dev:5678/webhook-test/waha-webhook",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "WAHA Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check /start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check /start": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "WAHA Send Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Instagram Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Produtos Tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8d42ab02-3d05-4bca-8e28-788cb54e14a9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dc59cd0b947adfd152b0527186161773c3b6288f353437f4cbac7d913c3d49a3"
+  },
+  "id": "cysL3kPtqkIFmQnH",
+  "tags": [
+    {
+      "updatedAt": "2026-03-22T16:43:38.129Z",
+      "createdAt": "2026-03-22T16:43:38.129Z",
+      "id": "xOJPN3vKtW8KNkQC",
+      "name": "Whatsapp"
+    },
+    {
+      "updatedAt": "2026-03-22T16:43:40.559Z",
+      "createdAt": "2026-03-22T16:43:40.559Z",
+      "id": "kwkFx1kyOqBtPUqV",
+      "name": "Chat"
+    }
+  ]
+}
