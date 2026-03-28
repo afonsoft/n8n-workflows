@@ -35,7 +35,13 @@
       "position": [
         460,
         300
-      ]
+      ],
+      "credentials": {
+        "instagramOAuth2Api": {
+          "id": "COLOCAR_ID_CREDENTIAL",
+          "name": "Instagram account"
+        }
+      }
     },
     {
       "parameters": {
