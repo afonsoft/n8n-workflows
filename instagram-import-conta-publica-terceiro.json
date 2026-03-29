@@ -23,11 +23,10 @@
     },
     {
       "parameters": {
-        "resource": "user",
-        "operation": "listMedia",
-        "authentication": "accessToken",
-        "limit": 25,
-        "userId": "NOME_DE_USUARIO_ALVO"
+        "resource": "IG User",
+        "operation": "Get Media",
+        "node": "NOME_DE_USUARIO_ALVO",
+        "limit": 25
       },
       "id": "instagram-user-media",
       "name": "Instagram - Posts Conta Alvo",
@@ -36,7 +35,13 @@
       "position": [
         460,
         300
-      ]
+      ],
+      "credentials": {
+        "instagramOAuth2Api": {
+          "id": "COLOCAR_ID_CREDENTIAL",
+          "name": "Instagram account"
+        }
+      }
     },
     {
       "parameters": {

@@ -23,9 +23,8 @@
     },
     {
       "parameters": {
-        "resource": "hashtag",
-        "operation": "search",
-        "authentication": "accessToken",
+        "resource": "IG Hashtag",
+        "operation": "Get Media",
         "hashtag": "arteriafestas",
         "limit": 25
       },
