@@ -22,6 +22,7 @@ Assistente Virtual (RAG)
 - **`instagram-import-minha-conta.json`** - Importação posts da sua conta
 - **`instagram-import-hashtag-arteriafestas.json`** - Importação por hashtag #arteriafestas
 - **`instagram-import-conta-publica-terceiro.json`** - Importação de conta pública de terceiros
+- **`instagram-import-structured-parser.json`** - Importação com parser estruturado avançado
 - **`WhatsApp Chat IA - Arteria Festas.json`** - Workflow existente do assistente
 
 ### Banco de Dados
@@ -44,7 +45,7 @@ Assistente Virtual (RAG)
 ### 3. Configurar Credenciais no n8n
 - **PostgreSQL**: mesma credencial usada no workflow existente (`nNWOoSo66DYfDpAF`)
 - **Google Gemini**: mesma credencial usada no workflow existente (`eJJhTvSw2avKW11x`)
-- **Instagram Access Token**: nova credencial para Graph API
+- **Instagram OAuth2 API**: nova credencial para Graph API (substituir `COLOCAR_ID_CREDENTIAL`)
 
 ### 4. Criar Tabela no PostgreSQL
 ```bash
@@ -55,6 +56,7 @@ psql -U seu_usuario -d seu_banco -f sql-instagram-posts-schema.sql
 1. No n8n: **Import from file**
 2. Selecionar os arquivos JSON
 3. Ativar os workflows
+4. **IMPORTANTE**: Substituir `COLOCAR_ID_CREDENTIAL` pelo ID real da credencial Instagram
 
 ## 🔧 Configuração dos Workflows
 
@@ -73,6 +75,44 @@ psql -U seu_usuario -d seu_banco -f sql-instagram-posts-schema.sql
 - **Fonte**: Posts de conta pública específica
 - **Limite**: 25 posts por execução
 - **Configuração**: Alterar `NOME_DE_USUARIO_ALVO` no node Instagram
+- **Parâmetros**: `resource: "IG User"`, `operation: "Get Media"`
+
+### Workflow 4: Structured Parser (Avançado)
+- **Agendamento**: A cada 6 horas
+- **Fonte**: Seus próprios posts com parsing avançado
+- **Limite**: 25 posts por execução
+- **Recursos**: Code node para estruturar dados
+- **Dados Enriquecidos**: Métricas, metadados, timestamp de captura
+- **Parâmetros**: `resource: "IG User"`, `operation: "Get Media"` + Code node
+
+## �️ Configuração Técnica dos Nodes Instagram
+
+### Parâmetros Corrigidos
+Todos os workflows foram atualizados com os parâmetros corretos do nó `@mookielianhd/n8n-nodes-instagram`:
+
+```json
+{
+  "resource": "IG User",           // Antes: "user"
+  "operation": "Get Media",       // Antes: "listMedia"
+  "node": "me" ou "username",   // Antes: "userId"
+  "limit": 25
+}
+```
+
+### Para Hashtags
+```json
+{
+  "resource": "IG Hashtag",        // Antes: "hashtag"
+  "operation": "Get Media",       // Antes: "search"
+  "hashtag": "arteriafestas",
+  "limit": 25
+}
+```
+
+### Credenciais
+- **Tipo**: `instagramOAuth2Api`
+- **Placeholder**: `COLOCAR_ID_CREDENTIAL` (substituir pelo ID real)
+- **Scopes necessários**: `instagram_basic`, `pages_show_list`, `instagram_content_publish`, `pages_read_engagement`
 
 ## 📊 Estrutura da Tabela
 
@@ -92,6 +132,44 @@ instagram_posts (
   updated_at TIMESTAMP DEFAULT NOW()
 )
 ```
+
+## 🔄 Estrutura de Dados do Structured Parser
+
+O workflow `instagram-import-structured-parser.json` utiliza um Code node para enriquecer os dados:
+
+```json
+{
+  "post_id": "id_do_post",
+  "url_post": "permalink",
+  "url_imagem": "media_url",
+  "legenda": "caption",
+  "tipo_conteudo": "media_type",
+  "data_publicacao": "timestamp",
+  "conta_origem": "@username",
+  "nome_perfil": "Nome completo",
+  "metricas": {
+    "likes": 150,
+    "comentarios": 23
+  },
+  "midia": {
+    "tipo": "IMAGE",
+    "url": "media_url",
+    "thumbnail": "thumbnail_url"
+  },
+  "metadata": {
+    "timestamp_captura": "2025-03-28T23:40:00Z",
+    "fonte": "instagram_graph_api",
+    "versao_parser": "1.0"
+  }
+}
+```
+
+### Vantagens do Parser Estruturado
+- ✅ **Dados consistentes**: Formato padronizado para todos os posts
+- ✅ **Métricas incluídas**: Likes e comentários capturados
+- ✅ **Metadados ricos**: Informações de processamento e versão
+- ✅ **Facilidade de análise**: Estrutura otimizada para consultas
+- ✅ **Rastreabilidade**: Timestamp de captura e fonte
 
 ## 🧠 Uso no Assistente Virtual
 
@@ -169,6 +247,8 @@ ORDER BY data_publicacao DESC;
 - **Dashboards** de monitoramento
 - **Múltiplas contas** para monitoramento concorrente
 - **Análise de engajamento** com métricas da API
+- **Parser avançado** com processamento de linguagem natural
+- **Alertas** para posts com alto engajamento
 
 ---
 
@@ -177,8 +257,9 @@ ORDER BY data_publicacao DESC;
 - [ ] Instalar community node do Instagram
 - [ ] Configurar credenciais Instagram API
 - [ ] Executar script SQL da tabela (com novos campos)
-- [ ] Importar workflows (3 workflows)
+- [ ] Importar workflows (4 workflows)
 - [ ] Configurar `NOME_DE_USUARIO_ALVO` no workflow de terceiros
+- [ ] Substituir `COLOCAR_ID_CREDENTIAL` pelo ID real da credencial Instagram
 - [ ] Testar execução manual
 - [ ] Ativar agendamentos
 - [ ] Verificar integração com assistente existente
